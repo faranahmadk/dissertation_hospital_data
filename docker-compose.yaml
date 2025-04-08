@@ -1,0 +1,58 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: "npm run start:dev"
+    ports:
+      - "4001:4001"
+    volumes:
+      - ./backend:/app # Mount the local backend folder to /app in the container
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DB_HOST: ${DB_HOST}         # Make sure this is set correctly
+      DB_PORT: ${DB_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      - db
+
+  frontend:
+    # Use the Dockerfile in the current directory to build the image
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: "npm run dev"
+    # Define environment variables (optional)
+    environment:
+      NODE_ENV: "development"
+      WATCHPACK_POLLING: true
+      CHOKIDAR_USEPOLLING: true
+      APPLICATION_PORT: "4000"
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./frontend:/app # Mount the local frontend folder to /app in the container
+    depends_on:
+      - backend
+
+  db:
+    container_name: hospital_app
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: llJYqjcPh9QdrtA4Ugyu0Qcp10vGsZbk
+      POSTGRES_DB: hospital_app_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hospital_app_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+volumes:
+  db_data:
