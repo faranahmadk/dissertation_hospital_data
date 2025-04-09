@@ -9,22 +9,32 @@ import { Patient } from './patients/patient.entity';
 import { ConfigModule } from '@nestjs/config';
 import { HospitalsController } from './hospitals/hospitals.controller';
 import { PatientsController } from './patients/patients.controller';
+import { ZkSnarkModule } from './zk-snark/zk-snark.module';
+import { ZkSnarkController } from './zk-snark/zk-snark.controller';
 
 @Module({
-  imports: [TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB,
-    entities: [Hospital, Patient],
-    synchronize: true,
-  }),
-    HospitalsModule, 
-    PatientsModule, 
-    ConfigModule.forRoot()],
-  controllers: [AppController, HospitalsController, PatientsController],
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+      entities: [Hospital, Patient],
+      synchronize: true,
+    }),
+    HospitalsModule,
+    PatientsModule,
+    ZkSnarkModule,
+    ConfigModule.forRoot(),
+  ],
+  controllers: [
+    AppController,
+    HospitalsController,
+    PatientsController,
+    ZkSnarkController,
+  ],
   providers: [AppService],
 })
 export class AppModule {}

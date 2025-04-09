@@ -7,10 +7,10 @@ services:
     ports:
       - "4001:4001"
     volumes:
-      - ./backend:/app # Mount the local backend folder to /app in the container
+      - ./backend:/app
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      DB_HOST: ${DB_HOST}         # Make sure this is set correctly
+      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,12 +19,10 @@ services:
       - db
 
   frontend:
-    # Use the Dockerfile in the current directory to build the image
     build:
       context: ./frontend
       dockerfile: Dockerfile
     command: "npm run dev"
-    # Define environment variables (optional)
     environment:
       NODE_ENV: "development"
       WATCHPACK_POLLING: true
@@ -33,7 +31,7 @@ services:
     ports:
       - "4000:4000"
     volumes:
-      - ./frontend:/app # Mount the local frontend folder to /app in the container
+      - ./frontend:/app
     depends_on:
       - backend
 
@@ -54,5 +52,13 @@ services:
       timeout: 5s
       retries: 5
     restart: on-failure
-volumes:
-  db_data:
+
+  rust-zkp-service:
+    container_name: zksnark_service
+    build:
+      context: ./zksnark_service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # Expose port 8080
+    depends_on:
+      - db

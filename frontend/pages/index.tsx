@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Layout from "../components/Layout";
+import ZKComponent from "../components/homePage/Homepage";
 
 const IndexPage = () => (
   <Layout title="Home | Next.js + TypeScript Example">
-    <h1>Hello Next.js 👋</h1>
+    < ZKComponent />
     <p>
       <Link href="/about">About</Link>
     </p>
