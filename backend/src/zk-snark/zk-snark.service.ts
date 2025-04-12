@@ -1,4 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import * as BN from 'bn.js'; // import like this
+
+// function toBufferLE(bigIntValue: bigint, byteSize: number): Buffer {
+//   const buffer = Buffer.alloc(byteSize);
+//   buffer.writeBigInt64LE(bigIntValue, 0); // If your BigInt is less than 64 bits
+//   // Or for larger values, break down the BigInt into multiple 64-bit chunks
+//   return buffer;
+// }
 
 @Injectable()
 export class ZkSnarkService {
@@ -10,35 +18,49 @@ export class ZkSnarkService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input: data }),
     });
-    if (!response.ok) throw new Error(`Failed to generate proof: ${response.status}`);
+    if (!response.ok)
+      throw new Error(`Failed to generate proof: ${response.status}`);
     return await response.json();
   }
 
+  async generateProofWithInput(input: number): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/generate-proof`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input }),
+    });
+    if (!response.ok)
+      throw new Error(`Failed to generate proof: ${response.status}`);
+    return await response.json();
+  }
+
+  // zk-snark.service.ts
   async verifyProof(proof: any): Promise<boolean> {
-    if (!proof) throw new Error('Proof is required for verification');
-  
-    // Log the proof to check its structure before sending
-    console.log("Proof Stringify JSON:", JSON.stringify(proof));
-  
-    // Prepare the proof object for sending
+    if (!proof) throw new Error('Proof required for verification');
+
+    // proof.public_input (directly from Rust backend) is already a byte array (LE)
+    if (!proof.public_input || proof.public_input.length !== 32) {
+      throw new Error('Public input must be exactly one 32-byte element');
+    }
+
     const proofPayload = {
-      proof: proof,  // Ensure 'proof' is the correct format for the backend
-      public_input: proof.public_input || []  // Include public input if necessary
+      proof: proof.proof,
+      public_input: proof.public_input, // Directly use as-is
     };
-  
-    // Send the POST request to the verify-proof endpoint
+
+    console.log('Payload sent to backend (Rust verifier):', proofPayload);
+
     const response = await fetch(`${this.baseUrl}/verify-proof`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(proofPayload),  // Send the serialized proof object
+      body: JSON.stringify(proofPayload),
     });
-  
-    if (!response.ok) throw new Error(`Failed to verify proof: ${response.status}`);
-  
-    // Parse and return the response from the backend
+
+    if (!response.ok)
+      throw new Error(`Failed verification: ${response.status}`);
+
     const responseData = await response.json();
-    console.log('Verify Proof Response:', responseData);
-    return responseData.valid || false;  // Check if the response indicates valid proof
+    console.log('Backend Verify Response:', responseData);
+    return responseData.valid || false;
   }
-  
 }

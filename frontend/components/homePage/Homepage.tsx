@@ -21,9 +21,10 @@ const ZKComponent = () => {
     };
 
     const verifyProof = async () => {
+        console.log("Payload sent to Rust verify-proof:", JSON.stringify(proof, null, 2));
         if (!proof) return alert('Generate proof first');
         try {
-            const response = await fetch('http://localhost:4001/zk-snark/verify', {
+            const response = await fetch('http://localhost:4001/zk-snark/verify-proof', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
