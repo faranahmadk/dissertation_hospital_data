@@ -34,7 +34,7 @@ impl Circuit<Fr> for MyCircuit {
             },
         )?;
 
-        cs.enforce(|| "a * a = out", |lc| lc + a, |lc| lc + a, |lc| lc + out);
+        cs.enforce(|| "a * a = out", |lc: bellman::LinearCombination<_>| lc + a, |lc: bellman::LinearCombination<_>| lc + a, |lc: bellman::LinearCombination<_>| lc + out);
 
         Ok(())
     }
@@ -61,18 +61,18 @@ async fn generate_proof(input: web::Json<ProofRequest>) -> impl Responder {
     let a_val: Fr = Fr::from(input.input);
     let output_val: Fr = a_val.square();
 
-    let mut params_lock = PARAMS.lock().unwrap();
+    let mut params_lock: std::sync::MutexGuard<'_, Option<(bellman::groth16::Parameters<Bls12>, bellman::groth16::PreparedVerifyingKey<Bls12>)>> = PARAMS.lock().unwrap();
     if params_lock.is_none() {
-        let params =
+        let params: bellman::groth16::Parameters<Bls12> =
             generate_random_parameters::<Bls12, _, _>(MyCircuit { a: Some(a_val) }, &mut OsRng)
                 .expect("parameter generation failed");
-        let pvk = prepare_verifying_key(&params.vk);
+        let pvk: bellman::groth16::PreparedVerifyingKey<Bls12> = prepare_verifying_key(&params.vk);
         *params_lock = Some((params, pvk));
     }
     let (params, _) = params_lock.as_ref().unwrap();
-    let proof = create_random_proof(MyCircuit { a: Some(a_val) }, params, &mut OsRng)
+    let proof: Proof<Bls12> = create_random_proof(MyCircuit { a: Some(a_val) }, params, &mut OsRng)
         .expect("proof generation failed");
-    let mut proof_bytes = vec![];
+    let mut proof_bytes: Vec<u8> = vec![];
     proof.write(&mut proof_bytes).unwrap();
 
     // Explicitly use Little Endian bytes for public input encoding
@@ -91,7 +91,7 @@ async fn generate_proof(input: web::Json<ProofRequest>) -> impl Responder {
 async fn verify_proof_endpoint(
     proof_data: web::Json<ProofResponse>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let proof = match Proof::<Bls12>::read(&mut Cursor::new(&proof_data.proof)) {
+    let proof: Proof<Bls12> = match Proof::<Bls12>::read(&mut Cursor::new(&proof_data.proof)) {
         Ok(p) => p,
         Err(e) => {
             println!("Invalid proof format: {:?}", e);
@@ -102,10 +102,10 @@ async fn verify_proof_endpoint(
     println!("✅ Received Proof: {:?}", proof);
 
     let mut public_input: Vec<Fr> = Vec::new();
-    let mut cursor = Cursor::new(&proof_data.public_input);
+    let mut cursor: Cursor<&Vec<u8>> = Cursor::new(&proof_data.public_input);
 
     loop {
-        let mut buf = [0u8; 32];
+        let mut buf: [u8; 32] = [0u8; 32];
         match cursor.read_exact(&mut buf) {
             Ok(_) => {
                 println!("🔍 Received Fr bytes (LE): {}", hex::encode(buf));
@@ -131,17 +131,17 @@ async fn verify_proof_endpoint(
         return Ok(HttpResponse::BadRequest().json("Invalid public input length"));
     }
 
-    let final_input = public_input[0];
+    let final_input: Fr = public_input[0];
     println!("✅ Final Public Input Element: {:?}", final_input);
 
-    let params_lock = PARAMS.lock().unwrap();
+    let params_lock: std::sync::MutexGuard<'_, Option<(bellman::groth16::Parameters<Bls12>, bellman::groth16::PreparedVerifyingKey<Bls12>)>> = PARAMS.lock().unwrap();
     if params_lock.is_none() {
         println!("⚠️ Verification parameters not initialized");
         return Ok(HttpResponse::InternalServerError().json("Parameters not initialized"));
     }
 
     let (_, pvk) = params_lock.as_ref().unwrap();
-    let is_valid = verify_proof(&pvk, &proof, &public_input).is_ok();
+    let is_valid: bool = verify_proof(&pvk, &proof, &public_input).is_ok();
 
     if is_valid {
         Ok(HttpResponse::Ok().json(json!({"valid": true, "message": "Proof is valid"})))

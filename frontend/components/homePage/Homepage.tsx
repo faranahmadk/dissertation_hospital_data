@@ -41,13 +41,44 @@ const ZKComponent = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-            <h1 className="text-2xl font-bold mb-4">ZK-SNARK Example</h1>
-            <p className="mb-4">Generate and verify a zero-knowledge proof.</p>
-            <button type="button" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onClick={generateProof}>Generate Proof</button>
-            <button type="button" className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800" onClick={verifyProof}>Verify Proof</button>
-            {proof && <div>Proof: {JSON.stringify(proof)}</div>}
-            {isValid !== null && <div>Verification: {isValid ? 'Valid' : 'Invalid'}</div>}
+        <div className="flex flex-col items-center justify-center min-h-screen bg-base-200 p-4">
+            <div className="card w-full max-w-lg bg-base-100 shadow-xl">
+            <div className="card-body">
+                <h1 className="card-title text-2xl font-bold">ZK-SNARK Example</h1>
+                <p className="mb-4">Generate and verify a zero-knowledge proof.</p>
+                
+                <div className="flex gap-2 mb-4">
+                <button className="btn btn-primary" onClick={generateProof}>Generate Proof</button>
+                <button className="btn btn-accent" onClick={verifyProof}>Verify Proof</button>
+                </div>
+                
+                {proof && (
+                <div className="collapse collapse-arrow bg-base-200 mb-4">
+                    <input type="checkbox" /> 
+                    <div className="collapse-title font-medium">
+                    Proof Generated
+                    </div>
+                    <div className="collapse-content">
+                    <pre className="text-xs whitespace-pre-wrap break-all bg-base-300 p-4 rounded-lg overflow-x-auto">
+                        {JSON.stringify(proof, null, 2)}
+                    </pre>
+                    </div>
+                </div>
+                )}
+                
+                {isValid !== null && (
+                <div className={`alert ${isValid ? 'alert-success' : 'alert-error'}`}>
+                    <div>
+                    {isValid ? 
+                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> :
+                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    }
+                    <span>{isValid ? 'Valid' : 'Invalid'} proof</span>
+                    </div>
+                </div>
+                )}
+            </div>
+            </div>
         </div>
     );
 };

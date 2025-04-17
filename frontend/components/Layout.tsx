@@ -15,16 +15,22 @@ const Layout = ({ children, title = "This is the default title" }: Props) => (
       <meta name="viewport" content="initial-scale=1.0, width=device-width" />
     </Head>
     <header>
-      <nav>
-        <Link href="/">Home</Link> | <Link href="/about">About</Link> |{" "}
-        <Link href="/users">Users List</Link> |{" "}
-        <a href="/api/users">Users API</a>
+      <nav className="navbar bg-base-100 rounded-box shadow-md">
+        <div className="navbar-start">
+          <ul className="menu menu-horizontal px-1">
+            <li><Link href="/" className="btn btn-ghost normal-case text-xl">Home</Link></li>
+            <li><Link href="/about" className="btn btn-ghost normal-case text-xl">About</Link></li>
+          </ul>
+        </div>
+        <div className="navbar-center hidden lg:flex">
+        </div>
       </nav>
     </header>
     {children}
-    <footer>
-      <hr />
-      <span>I'm here to stay (Footer)</span>
+    <footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
+      <aside>
+        <p>Karl Timmins Dissertation Copyright © {new Date().getFullYear()} - Zero Knowledge Medical Data</p>
+      </aside>
     </footer>
   </div>
 );
